@@ -4,6 +4,8 @@ services:
   # ==========================================
   paperclip:
     container_name: paperclip_app
+    profiles:
+      - paperclip
     image: ghcr.io/paperclipai/paperclip:latest
     pull_policy: always
     # FIX: Copy missing markdown built-ins, fix volume permissions, and run the native node command
@@ -55,6 +57,8 @@ services:
   db:
     image: postgres:17-alpine
     container_name: paperclip_db
+    profiles:
+      - paperclip
     restart: unless-stopped
     networks:
       - backend
