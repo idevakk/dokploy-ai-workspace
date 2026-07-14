@@ -3,7 +3,6 @@ services:
   # 1. PAPERCLIP (OFFICIAL PRE-BUILT IMAGE + FIXES)
   # ==========================================
   paperclip:
-    container_name: paperclip_app
     profiles:
       - paperclip
     image: ghcr.io/paperclipai/paperclip:latest
@@ -56,7 +55,6 @@ services:
   # ==========================================
   db:
     image: postgres:17-alpine
-    container_name: paperclip_db
     profiles:
       - paperclip
     restart: unless-stopped
@@ -79,7 +77,6 @@ services:
   # ==========================================
   omnirouter:
     image: diegosouzapw/omniroute:latest
-    container_name: omnirouter_gateway
     expose:
       - "20128" # Main API & Dashboard (Proxy your HTTPS domain here)
       - "20131" # Live Monitoring WebSocket
@@ -123,7 +120,6 @@ services:
 
   omnirouter-redis:
     image: redis:alpine
-    container_name: omnirouter_cache
     command: redis-server --appendonly yes
     networks:
       - backend
@@ -140,7 +136,6 @@ services:
   # 3. OPENCODE (DYNAMIC WEB ENVIRONMENT)
   # ==========================================
   opencode:
-    container_name: opencode_portal
     image: opencode-dynamic:latest
     build:
       context: .
