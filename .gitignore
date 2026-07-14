@@ -1,0 +1,12 @@
+# Ignore environment variables file
+.env
+
+# Ignore node_modules if ever used locally
+node_modules/
+
+# MacOS system files
+.DS_Store
+
+# Ignore IDE specific folders
+.vscode/
+.idea/

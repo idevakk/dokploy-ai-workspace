@@ -1,0 +1,176 @@
+services:
+  # ==========================================
+  # 1. PAPERCLIP (OFFICIAL PRE-BUILT IMAGE + FIXES)
+  # ==========================================
+  paperclip:
+    container_name: paperclip_app
+    image: ghcr.io/paperclipai/paperclip:latest
+    pull_policy: always
+    # FIX: Copy missing markdown built-ins, fix volume permissions, and run the native node command
+    entrypoint:
+      - "/bin/sh"
+      - "-c"
+      - |
+        mkdir -p /app/server/dist/built-ins
+        cp -r /app/server/src/built-ins/* /app/server/dist/built-ins/ 2>/dev/null || true
+        chown -R node:node /paperclip 2>/dev/null || true
+        exec /usr/local/bin/docker-entrypoint.sh node --import ./server/node_modules/tsx/dist/loader.mjs server/dist/index.js
+    # Host resource governance blocks to safeguard the underlying OS kernel
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2048M
+        reservations:
+          memory: 512M
+    expose:
+      - "3100"
+    networks:
+      - frontend
+      - backend
+    environment:
+      - HOST=0.0.0.0
+      - PAPERCLIP_HOME=/paperclip
+      # 1. Set your actual external URL (use https:// if you have SSL/TLS configured)
+      - PAPERCLIP_PUBLIC_URL=${PAPERCLIP_PUBLIC_URL}
+      # 2. Add the allowed hostname explicitly (comma-separate if you have multiple)
+      - PAPERCLIP_ALLOWED_HOSTNAMES=${PAPERCLIP_ALLOWED_HOSTNAMES}
+      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
+      - DATABASE_URL=postgres://paperclip:${POSTGRES_PASSWORD}@db:5432/paperclip
+      - PAPERCLIP_MIGRATION_AUTO_APPLY=true
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - PAPERCLIP_DEPLOYMENT_MODE=authenticated
+      - PAPERCLIP_DEPLOYMENT_EXPOSURE=private
+    volumes:
+      - paperclip_data:/paperclip
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ==========================================
+  # 1b. POSTGRESQL DATABASE (DEDICATED DB)
+  # ==========================================
+  db:
+    image: postgres:17-alpine
+    container_name: paperclip_db
+    restart: unless-stopped
+    networks:
+      - backend
+    environment:
+      POSTGRES_USER: paperclip
+      POSTGRES_DB: paperclip
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U paperclip" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ==========================================
+  # 2. OMNIROUTER (PRODUCTION - HTTPS)
+  # ==========================================
+  omnirouter:
+    image: diegosouzapw/omniroute:latest
+    container_name: omnirouter_gateway
+    expose:
+      - "20128" # Main API & Dashboard (Proxy your HTTPS domain here)
+      - "20131" # Live Monitoring WebSocket
+    networks:
+      - frontend
+      - backend
+    environment:
+      - NODE_ENV=production
+      - REDIS_URL=redis://omnirouter-redis:6379
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+      - DISABLE_LOCALHOST_CHECK=true
+      - STRICT_LOCALHOST=false
+      - ALLOW_EXTERNAL_ACCESS=true
+
+      # --- HTTPS DOMAIN & HOSTNAME CONFIGURATION ---
+      # 1. Main public URL (No port needed since HTTPS uses standard port 443)
+      - NEXT_PUBLIC_BASE_URL=${OMNI_PUBLIC_BASE_URL}
+
+      # 2. Bind WebSocket to 0.0.0.0 so Docker can expose it to your reverse proxy
+      - LIVE_WS_HOST=0.0.0.0
+
+      # 3. Whitelist your HTTPS origin to prevent 403 Forbidden WebSocket errors
+      - LIVE_WS_ALLOWED_ORIGINS=${OMNI_WS_ALLOWED_ORIGINS}
+
+      # 4. Secure WebSocket (wss://) endpoint for the frontend dashboard
+      - NEXT_PUBLIC_LIVE_WS_PUBLIC_URL=${OMNI_WS_PUBLIC_URL}
+
+      # --- PRODUCTION SECURITY SECRETS ---
+      # For true production, define these in your .env file! (Generate via: openssl rand -hex 32)
+      - JWT_SECRET=${OMNI_JWT_SECRET}
+      - API_KEY_SECRET=${OMNI_API_KEY_SECRET}
+      - OMNIROUTE_WS_BRIDGE_SECRET=${OMNI_WS_BRIDGE_SECRET}
+      - INITIAL_PASSWORD=${OMNI_PASSWORD}
+    volumes:
+      - omnirouter_data:/app/data
+    stop_grace_period: 40s
+    depends_on:
+      omnirouter-redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  omnirouter-redis:
+    image: redis:alpine
+    container_name: omnirouter_cache
+    command: redis-server --appendonly yes
+    networks:
+      - backend
+    volumes:
+      - omnirouter_redis_data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  # ==========================================
+  # 3. OPENCODE (DYNAMIC WEB ENVIRONMENT)
+  # ==========================================
+  opencode:
+    container_name: opencode_portal
+    image: opencode-dynamic:latest
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM node:22-alpine
+        RUN apk add --no-cache git curl bash openssh-client
+        RUN echo '#!/bin/sh' > /usr/local/bin/xdg-open && \
+            echo 'exit 0' >> /usr/local/bin/xdg-open && \
+            chmod +x /usr/local/bin/xdg-open
+        RUN npm install -g opencode-ai@latest
+        WORKDIR /workspace
+        USER node
+        EXPOSE 8080
+        ENTRYPOINT ["opencode", "web", "--port", "8080", "--hostname", "0.0.0.0"]
+    expose:
+      - "8080"
+    networks:
+      - frontend
+    environment:
+      - GH_TOKEN=${GH_TOKEN:-}
+      - OPENCODE_SERVER_PASSWORD=${OPENCODE_PASSWORD}
+    volumes:
+      - opencode_workspace:/workspace
+    restart: unless-stopped
+
+networks:
+  frontend:
+    driver: bridge
+  backend:
+    driver: bridge
+
+volumes:
+  paperclip_data:
+  pgdata:
+  omnirouter_data:
+  omnirouter_redis_data:
+  opencode_workspace:
