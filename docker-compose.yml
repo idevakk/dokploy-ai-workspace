@@ -167,6 +167,31 @@ services:
       - opencode_workspace:/workspace
     restart: unless-stopped
 
+  # ==========================================
+  # 4. 9ROUTER (AI ROUTER & TOKEN SAVER)
+  # ==========================================
+  9router:
+    image: 9router-dynamic:latest
+    profiles:
+      - 9router
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM decolua/9router:latest
+        USER root
+        RUN npm install -g 9router@latest
+    expose:
+      - "20129"
+    networks:
+      - frontend
+      - backend
+    environment:
+      - PORT=20129
+      - NEXT_PUBLIC_BASE_URL=${NINEROUTER_PUBLIC_URL:-http://localhost:20129}
+    volumes:
+      - 9router_data:/app/data
+    restart: unless-stopped
+
 networks:
   frontend:
     driver: bridge
@@ -179,3 +204,4 @@ volumes:
   omnirouter_data:
   omnirouter_redis_data:
   opencode_workspace:
+  9router_data:
