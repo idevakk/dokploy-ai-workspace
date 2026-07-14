@@ -76,7 +76,13 @@ services:
   # 2. OMNIROUTER (PRODUCTION - HTTPS)
   # ==========================================
   omnirouter:
-    image: diegosouzapw/omniroute:latest
+    image: omnirouter-dynamic:latest
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM diegosouzapw/omniroute:latest
+        USER root
+        RUN npm install -g omniroute@latest
     expose:
       - "20128" # Main API & Dashboard (Proxy your HTTPS domain here)
       - "20131" # Live Monitoring WebSocket
