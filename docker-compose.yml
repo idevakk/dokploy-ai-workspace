@@ -191,6 +191,18 @@ services:
       - 9router_data:/app/data
     restart: unless-stopped
 
+  9router-tunnel:
+    image: cloudflare/cloudflared:latest
+    profiles:
+      - 9router
+    command: tunnel --url http://9router:20129
+    networks:
+      - frontend
+      - backend
+    restart: unless-stopped
+    depends_on:
+      - 9router
+
 networks:
   frontend:
     driver: bridge
