@@ -76,13 +76,7 @@ services:
   # 2. OMNIROUTER (PRODUCTION - HTTPS)
   # ==========================================
   omnirouter:
-    image: omnirouter-dynamic:latest
-    build:
-      context: .
-      dockerfile_inline: |
-        FROM diegosouzapw/omniroute:latest
-        USER root
-        RUN npm install -g omniroute@latest
+    image: diegosouzapw/omniroute:latest
     expose:
       - "20128" # Main API & Dashboard (Proxy your HTTPS domain here)
       - "20131" # Live Monitoring WebSocket
@@ -171,15 +165,9 @@ services:
   # 4. 9ROUTER (AI ROUTER & TOKEN SAVER)
   # ==========================================
   9router:
-    image: 9router-dynamic:latest
+    image: decolua/9router:latest
     profiles:
       - 9router
-    build:
-      context: .
-      dockerfile_inline: |
-        FROM decolua/9router:latest
-        USER root
-        RUN npm install -g 9router@latest
     expose:
       - "20129"
     networks:
