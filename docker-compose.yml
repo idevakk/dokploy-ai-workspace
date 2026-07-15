@@ -77,6 +77,8 @@ services:
   # ==========================================
   omnirouter:
     image: diegosouzapw/omniroute:latest
+    profiles:
+      - omnirouter
     expose:
       - "20128" # Main API & Dashboard (Proxy your HTTPS domain here)
       - "20131" # Live Monitoring WebSocket
@@ -120,6 +122,8 @@ services:
 
   omnirouter-redis:
     image: redis:alpine
+    profiles:
+      - omnirouter
     command: redis-server --appendonly yes
     networks:
       - backend
@@ -137,6 +141,8 @@ services:
   # ==========================================
   opencode:
     image: opencode-dynamic:latest
+    profiles:
+      - opencode
     build:
       context: .
       dockerfile_inline: |
