@@ -188,6 +188,9 @@ services:
     environment:
       - PORT=20129
       - NEXT_PUBLIC_BASE_URL=${NINEROUTER_PUBLIC_URL:-http://localhost:20129}
+      - DISABLE_LOCALHOST_CHECK=true
+      - STRICT_LOCALHOST=false
+      - ALLOW_EXTERNAL_ACCESS=true
     volumes:
       - 9router_data:/app/data
     restart: unless-stopped
