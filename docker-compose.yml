@@ -76,7 +76,7 @@ services:
   # 2. OMNIROUTER (PRODUCTION - HTTPS)
   # ==========================================
   omnirouter:
-    image: diegosouzapw/omniroute:latest
+    image: diegosouzapw/omniroute:3.8.49
     user: "root"
     profiles:
       - omnirouter
@@ -172,7 +172,7 @@ services:
   # 4. 9ROUTER (AI ROUTER & TOKEN SAVER)
   # ==========================================
   9router:
-    image: ghcr.io/decolua/9router:latest
+    image: decolua/9router:0.5.50
     user: "root"
     profiles:
       - 9router
