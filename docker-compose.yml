@@ -210,6 +210,14 @@ services:
     image: ekkoye8888/hermes-web-ui:v1.0.1
     profiles:
       - hermes
+    # Host resource governance blocks to safeguard the underlying OS kernel
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2048M
+        reservations:
+          memory: 512M
     expose:
       - "6060" # Main Web UI & Dashboard
       - "8651" # Preview Frontend
