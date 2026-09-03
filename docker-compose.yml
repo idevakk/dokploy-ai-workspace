@@ -203,6 +203,40 @@ services:
     depends_on:
       - 9router
 
+  # ==========================================
+  # 5. HERMES STUDIO (WEB UI & AGENT RUNTIME)
+  # ==========================================
+  hermes:
+    image: ekkoye8888/hermes-web-ui:v1.0.1
+    profiles:
+      - hermes
+    expose:
+      - "6060" # Main Web UI & Dashboard
+      - "8651" # Preview Frontend
+      - "56121" # xAI OAuth Callback
+    networks:
+      - frontend
+      - backend
+    environment:
+      - PORT=6060
+      - BIND_HOST=0.0.0.0
+      - HERMES_HOME=/home/agent/.hermes
+      - HERMES_BIN=/opt/hermes/.venv/bin/hermes
+      - HERMES_WEB_UI_MANAGED_GATEWAY=1
+      - HERMES_WEB_UI_AUTH_JWT_EXPIRES_IN=${HERMES_AUTH_JWT_EXPIRES_IN:-30d}
+      - HERMES_WEB_UI_XAI_CALLBACK_BIND_HOST=0.0.0.0
+      - HERMES_LAN_ADVERTISE_URL=${HERMES_LAN_ADVERTISE_URL:-}
+      - HERMES_APP_ENTITLEMENT_REQUIRED=${HERMES_APP_ENTITLEMENT_REQUIRED:-true}
+      - HERMES_APP_ENTITLEMENT_PUBLIC_KEY=${HERMES_APP_ENTITLEMENT_PUBLIC_KEY:-}
+      - PATH=/opt/hermes/.venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+      - HERMES_ALLOW_ROOT_GATEWAY=1
+    volumes:
+      - hermes_data:/home/agent/.hermes
+      - hermes_webui_data:/home/agent/.hermes-web-ui
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+
 networks:
   frontend:
     driver: bridge
@@ -216,3 +250,5 @@ volumes:
   omnirouter_redis_data:
   opencode_workspace:
   9router_data:
+  hermes_data:
+  hermes_webui_data:

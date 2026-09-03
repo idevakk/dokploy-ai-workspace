@@ -5,6 +5,8 @@ This repository contains a secure, ready-to-deploy Docker Compose stack designed
 1. **Paperclip** - An AI-powered workspace.
 2. **OmniRouter** - A centralized gateway/router for AI models.
 3. **OpenCode** - A dynamic web environment for code execution and AI assistance.
+4. **9Router** - AI router and token saver.
+5. **Hermes Studio** - Multi-agent desktop app, local runtime, and web console for Hermes Agent.
 
 ## Built-In Security Features
 
@@ -41,13 +43,21 @@ This stack has been optimized for production security:
 - **Internal Port:** `8080`
 - Uses an inline Dockerfile based on Node 22 to install `opencode-ai` and set up the web environment securely as the `node` user.
 
+### 4. 9Router
+- **Internal Port:** `20129`
+- Proxy / router to optimize AI tokens and manage model endpoints.
+
+### 5. Hermes Studio
+- **Internal Port:** `6060` (Web UI dashboard), `8651` (Frontend preview), `56121` (xAI OAuth)
+- Multi-agent web console and local runtime for Hermes Agent, Ekko, Claude Code, Codex, and Pi.
+
 ## Local Testing
 
 If you wish to test this stack locally before deploying to Dokploy:
 1. Clone the repository and run `cp .env.example .env`.
 2. Fill out the `.env` file.
 3. Run `docker compose up -d`.
-4. Access the services via `localhost` and the respective exposed ports (`3100`, `20130`, `8080`).
+4. Access the services via `localhost` and the respective exposed ports (`3100`, `20130`, `8080`, `20129`, `6060`).
 
 ## Volumes
 
@@ -57,3 +67,6 @@ The following persistent volumes are created automatically and managed by Dokplo
 - `omnirouter_data`
 - `omnirouter_redis_data`
 - `opencode_workspace`
+- `9router_data`
+- `hermes_data` (Hermes configuration & models)
+- `hermes_webui_data` (Hermes Web UI persistent sessions and data)
