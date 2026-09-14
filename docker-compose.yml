@@ -245,6 +245,41 @@ services:
     tty: true
     restart: unless-stopped
 
+  # ==========================================
+  # 6. VANSROUTER (AI ROUTER & TOKEN SAVER - 9ROUTER FORK)
+  # ==========================================
+  vansrouter:
+    image: ghcr.io/vanszs/vansrouter:0.91.21
+    user: "root"
+    profiles:
+      - vansrouter
+    expose:
+      - "20132"
+    networks:
+      - frontend
+      - backend
+    environment:
+      - PORT=20132
+      - NEXT_PUBLIC_BASE_URL=${VANSROUTER_PUBLIC_URL:-http://localhost:20132}
+      - DISABLE_LOCALHOST_CHECK=true
+      - STRICT_LOCALHOST=false
+      - ALLOW_EXTERNAL_ACCESS=true
+    volumes:
+      - vansrouter_data:/app/data
+    restart: unless-stopped
+
+  vansrouter-tunnel:
+    image: cloudflare/cloudflared:latest
+    profiles:
+      - vansrouter
+    command: tunnel --url http://vansrouter:20132
+    networks:
+      - frontend
+      - backend
+    restart: unless-stopped
+    depends_on:
+      - vansrouter
+
 networks:
   frontend:
     driver: bridge
@@ -258,5 +293,6 @@ volumes:
   omnirouter_redis_data:
   opencode_workspace:
   9router_data:
+  vansrouter_data:
   hermes_data:
   hermes_webui_data:
