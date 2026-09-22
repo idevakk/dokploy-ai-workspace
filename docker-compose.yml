@@ -172,7 +172,7 @@ services:
   # 4. 9ROUTER (AI ROUTER & TOKEN SAVER)
   # ==========================================
   9router:
-    image: decolua/9router:0.5.75
+    image: decolua/9router:0.5.85
     user: "root"
     profiles:
       - 9router
