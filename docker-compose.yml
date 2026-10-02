@@ -76,7 +76,7 @@ services:
   # 2. OMNIROUTER (PRODUCTION - HTTPS)
   # ==========================================
   omnirouter:
-    image: diegosouzapw/omniroute:3.8.50
+    image: diegosouzapw/omniroute:3.8.51
     user: "root"
     profiles:
       - omnirouter
